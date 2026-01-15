@@ -10,11 +10,11 @@ def get_dataset2(requete):
     
     if reponse.status_code == 200:
         data = reponse.json()
-        print(f" J'ai récupéré {len(data['elements'])} éléments.")
+        print(len(data['elements']))
         return data
     else:
         print("Erreur API : " + str(reponse.status_code))
-        return None
+        return None # quand ya l'erreur api
     
 
 def compute_statistics2(donnees):
@@ -27,10 +27,10 @@ def compute_statistics2(donnees):
         tags = hotel.get('tags', {})        # on recupere les tags sans faire planter si vide grace a .get 
 
         if 'stars' in tags:                 
-            nb = tags['stars']              # Lit le nombre d'étoiles
-            if nb not in dico_etoiles:      # Si ce chiffre n'existe pas encore
-                dico_etoiles[nb] = 0        # On crée la case à 0
-            dico_etoiles[nb] += 1           # On ajoute +1 au compteur
+            nb = tags['stars']              # lit le nombre d'étoiles
+            if nb not in dico_etoiles:      # au cas ou la cle existe pas deja
+                dico_etoiles[nb] = 0        # on cree la cle à 0
+            dico_etoiles[nb] += 1           # on ajoute 1 au compteur
 
         if 'wheelchair' in tags:            
             acces = tags['wheelchair']     
@@ -38,34 +38,34 @@ def compute_statistics2(donnees):
                 dico_handicap[acces] = 0    
             dico_handicap[acces] += 1       
 
-    resultat_etoiles = {}                   # Nouveau dico pour stocker les % finaux
+    resultat_etoiles = {}                   # nouveau dico pour stocker les % 
     for cle, valeur in dico_etoiles.items():
-        pourcentage = int((valeur / total) * 100)       # Calcul : (Nombre / Total) * 100
-        resultat_etoiles[cle] = str(pourcentage) + "%"  
+        pourcentage = int((valeur / total) * 100)       # calcul Nombre / Total * 100
+        resultat_etoiles[cle] = str(pourcentage) + "%"  # str comme on fait + on peut + des int et des str
 
     resultat_handicap = {}                  
     for cle, valeur in dico_handicap.items():
         pourcentage = int((valeur / total) * 100)       
-        resultat_handicap[cle] = str(pourcentage) + "%" # str comme on fait + on peut + des int et des str
+        resultat_handicap[cle] = str(pourcentage) + "%" 
 
     return resultat_etoiles, resultat_handicap          # Renvoie les deux dico 
 
 def dataset_to_md(dataset: dict, filename: str):
     with open(filename, "w", encoding="utf-8") as f:
-        f.write("# Rapport des données\n\n")
+        f.write("# donnees\n\n")
 
         stats_etoiles, stats_handi = compute_statistics2(dataset) #On recupere les stat via comput stat
 
         f.write("## Statistiques\n\n")
-        f.write("### Répartition Etoiles\n")
+        f.write("### pourcentage d'étoiles\n")
         for cle, valeur in stats_etoiles.items():
             f.write(f"- **{cle}** : {valeur}\n")
 
-        f.write("\n### Répartition Handicap\n")
+        f.write("\n### Pourcentage Handicap\n")
         for cle, valeur in stats_handi.items():
             f.write(f"- **{cle}** : {valeur}\n")
 
-        f.write("\n## Liste détaillée\n\n")
+        f.write("\n## liste complete\n\n")
 
         elements = dataset['elements']
         for element in elements:
@@ -97,7 +97,13 @@ def info_locales(data):
 
 
 
-
+query = """
+[out:json][timeout:90];
+area["wikipedia"="ca:Barcelona"]->.searchArea;
+// C'est ICI que la magie opère :
+nwr["tourism"="hotel"]["stars"~"3|4|5"](area.searchArea);
+out center;
+"""
 
 
 
