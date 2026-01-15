@@ -111,3 +111,6 @@ def compute_statistics2(donnees):
             dico_handicap[cle] = str(pourcentage) + "%"
 
     return dico_etoiles, dico_handicap
+
+
+
