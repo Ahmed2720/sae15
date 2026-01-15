@@ -48,7 +48,8 @@ def node_to_md(donnes:dict,fichier:str) -> None:
             nom = donnes["tags"]["name"]
     
         f.write(f"# {nom}\n\n")
-        
+        id = donnes.get('id')
+        f.write(f'## [lien](https://www.openstreetmap.org/node/{id})\n\n')
         f.write("Voici les informations :\n\n")
        
         for cle, valeur in donnes.items():
