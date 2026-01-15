@@ -1,27 +1,5 @@
-def get_dataset(requete):
-    # L'adresse de l'API
-    url = "https://overpass-api.de/api/interpreter"
-    
-    ma_requete ="""
-    [out:json][timeout:90];
-    area["wikipedia"="fr:Caen"]->.zone_de_recherche;
-    (
-      node["shop"="florist"](area.zone_de_recherche);
-      nwr["shop"="supermarket"](area.zone_de_recherche);
-    );
-    out geom;
-    """
-    # On envoie la requete (avec 90s d'attente max pour eviter l'erreur 504)
-    reponse = requests.get(url, params={'data': requete}, timeout=90)
-    resultat = reponse.json()
-    # Si c'est bon (200), on renvoie le JSON
-    if reponse.status_code == 200:
-        print(f"J'ai recupere {len(resultat['elements'])} elements.")
-    else:
-        print("Erreur API : " + str(reponse.status_code))
-        return None
 
-
+import markdown
 import requests
 import json
 
@@ -39,78 +17,88 @@ def get_dataset2(requete):
         return None
     
 
-
-def compute_statistics(donnees):
-    compteur_etoiles = {}
-    compteur_handicap = {}
-
-    elements = donnees['elements']
-
-    liste_hotels = donnees['elements']
-    for hotel in liste_hotels:
-        if 'tags' in hotel:
-            tags = hotel['tags']
-        if 'stars' in tags:
-            etoiles = tags['stars'] 
-        if etoiles not in compteur_etoiles:
-            compteur_etoiles[etoiles] = 0
-            compteur_etoiles[etoiles] = compteur_etoiles[etoiles] + 1
-        if 'wheelchair' in tags:
-                acces = tags['wheelchair']
-                if acces not in compteur_handicap:
-                    compteur_handicap[acces] = 0
-                compteur_handicap[acces] += 1
-    total_etoiles = 0
-    total_handi = 0
-    for cle in compteur_etoiles:
-        total_etoiles += compteur_etoiles[cle]
-        compteur_etoiles[cle] = str(int(compteur_etoiles[cle] / total_handi * 100)) + "%"
-
-    for cle in compteur_handicap:
-        total_handi += compteur_handicap[cle]
-        compteur_handicap[cle] = str(int(compteur_handicap[cle] / total_handi * 100)) + "%"
-
-
 def compute_statistics2(donnees):
-    elements = donnees['elements']
+    elements = donnees['elements']          # Récupère la liste des hôtels
+    total = len(elements)                   # Le total est la taille de la liste pour la division plus tard 
+    dico_etoiles = {}                       
+    dico_handicap = {}                     
+
+    for hotel in elements:                  # On parcourt chaque hôtel un par un
+        tags = hotel.get('tags', {})        # on recupere les tags sans faire planter si vide grace a .get 
+
+        if 'stars' in tags:                 
+            nb = tags['stars']              # Lit le nombre d'étoiles
+            if nb not in dico_etoiles:      # Si ce chiffre n'existe pas encore
+                dico_etoiles[nb] = 0        # On crée la case à 0
+            dico_etoiles[nb] += 1           # On ajoute +1 au compteur
+
+        if 'wheelchair' in tags:            
+            acces = tags['wheelchair']     
+            if acces not in dico_handicap:  
+                dico_handicap[acces] = 0    
+            dico_handicap[acces] += 1       
+
+    resultat_etoiles = {}                   # Nouveau dico pour stocker les % finaux
+    for cle, valeur in dico_etoiles.items():
+        pourcentage = int((valeur / total) * 100)       # Calcul : (Nombre / Total) * 100
+        resultat_etoiles[cle] = str(pourcentage) + "%"  
+
+    resultat_handicap = {}                  
+    for cle, valeur in dico_handicap.items():
+        pourcentage = int((valeur / total) * 100)       
+        resultat_handicap[cle] = str(pourcentage) + "%" # str comme on fait + on peut + des int et des str
+
+    return resultat_etoiles, resultat_handicap          # Renvoie les deux dico 
+
+def dataset_to_md(dataset: dict, filename: str):
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write("# Rapport des données\n\n")
+
+        stats_etoiles, stats_handi = compute_statistics2(dataset) #On recupere les stat via comput stat
+
+        f.write("## Statistiques\n\n")
+        f.write("### Répartition Etoiles\n")
+        for cle, valeur in stats_etoiles.items():
+            f.write(f"- **{cle}** : {valeur}\n")
+
+        f.write("\n### Répartition Handicap\n")
+        for cle, valeur in stats_handi.items():
+            f.write(f"- **{cle}** : {valeur}\n")
+
+        f.write("\n## Liste détaillée\n\n")
+
+        elements = dataset['elements']
+        for element in elements:
+            tags = element.get('tags', {})
+            nom = tags.get('name', "Inconnu")
+            
+            f.write(f"### {nom}\n\n")
+
+            for cle, valeur in tags.items(): # # On affiche tous les tags de l'hôtel
+                f.write(f"- **{cle}** : {valeur}\n")
+            
+            f.write("\n")
+
+
+def convert(fichier1,fichier2):
+    with open('info_locales.md', 'r') as f:
+        text = f.read()
+
+    html = markdown.markdown(text)
     
-    dico_etoiles = {}
-    total_etoiles = 0
-    
-    dico_handicap = {}
-    total_handi = 0
+    with open('info_locales.html', 'w') as f:
+        f.write(html)
+
+def info_locales(data):
+    compute_statistics2(get_dataset2(query))
+    dataset_to_md(data,'info_locales.md')
+    convert('info_locales.md','info_locales.html')
 
 
-    for hotel in elements:
-        tags = hotel.get('tags', {})
 
-        if 'stars' in tags:
-            nb = tags['stars']
-            if nb not in dico_etoiles:
-                dico_etoiles[nb] = 0
-            dico_etoiles[nb] += 1
-            total_etoiles += 1
 
-        if 'wheelchair' in tags:
-            acces = tags['wheelchair']
-            if acces not in dico_handicap:
-                dico_handicap[acces] = 0
-            dico_handicap[acces] += 1
-            total_handi += 1
 
-    for cle in dico_etoiles:
-        valeur = dico_etoiles[cle]
-        if total_etoiles > 0:
-            pourcentage = int((valeur / total_etoiles) * 100)
-            dico_etoiles[cle] = str(pourcentage) + "%"
 
-    for cle in dico_handicap:
-        valeur = dico_handicap[cle]
-        if total_handi > 0:
-            pourcentage = int((valeur / total_handi) * 100)
-            dico_handicap[cle] = str(pourcentage) + "%"
-
-    return dico_etoiles, dico_handicap
 
 
 

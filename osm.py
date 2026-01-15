@@ -75,4 +75,3 @@ def fiche_osm(id:int):
     node_to_md(get_node(id),"osm.md")
     convert()
 
-
