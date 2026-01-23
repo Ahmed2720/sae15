@@ -20,8 +20,8 @@ def get_dataset2(requete):
 def compute_statistics2(donnees):
     elements = donnees['elements'] # Récupère la liste des hôtels
 
-    total_etoiles= 0
-    total_handi = 0   
+    total_etoiles= 0          # total qui va servir a diviser pour %
+    total_handi = 0             
 
     dico_etoiles = {}                       
     dico_handi = {} 
@@ -29,7 +29,7 @@ def compute_statistics2(donnees):
     for hotel in elements:                  # On parcourt chaque hôtel un par un
         tags = hotel.get('tags', {})        # on recupere les tags sans faire planter si vide grace a .get 
 
-        if 'stars' in tags:                 
+        if 'stars' in tags:                 # on verifie si l'atttribut etoile existe
             nb = tags['stars']              # lit le nombre d'étoiles
             if nb not in dico_etoiles:      # au cas ou la cle existe pas deja
                 dico_etoiles[nb] = 0        # on cree la cle à 0
@@ -87,7 +87,7 @@ def dataset_to_md(dataset: dict, filename: str):
 
             id = element.get('id')
             type = element.get('type')
-            f.write(f"[Voir sur la carte](https://www.openstreetmap.org/{type}/{id})\n\n")
+            f.write(f"[lien OSM](https://www.openstreetmap.org/{type}/{id})\n\n")
 
             for cle, valeur in tags.items(): 
                 f.write(f"- **{cle}** : {valeur}\n")
