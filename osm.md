@@ -1,22 +1,26 @@
-# Les Saveurs de St Pierre
+# Hotel Barcelona Universal
 
-## [lien](https://www.openstreetmap.org/node/1192915987)
+### Carte
+
+![Carte](carte_marqueur.png)
+
+## [lien](https://www.openstreetmap.org/node/192067263)
 
 Voici les informations :
 
 - **type** : node
-- **id** : 1192915987
-- **lat** : 49.1833915
-- **lon** : -0.3631191
-- **timestamp** : 2025-12-24T09:44:54Z
-- **version** : 18
-- **changeset** : 176346368
-- **user** : David Crochet
-- **uid** : 50624
-- **contact:street** : Rue Saint-Pierre
-- **name** : Les Saveurs de St Pierre
-- **opening_hours** : Mo-Fr 07:30-19:30; Sa 08:00-19:00
-- **ref:FR:SIRET** : 90768912900019
-- **shop** : bakery
-- **wheelchair** : no
-- **wheelchair:description** : Deux marches pour accéder au commerce.
+- **id** : 192067263
+- **lat** : 41.3751971
+- **lon** : 2.1682509
+- **timestamp** : 2025-11-03T18:05:31Z
+- **version** : 7
+- **changeset** : 174160159
+- **user** : mapping_cheese
+- **uid** : 21751288
+- **check_date** : 2025-11-03
+- **name** : Hotel Barcelona Universal
+- **phone** : +34935677447
+- **rooms** : 167
+- **stars** : 4
+- **tourism** : hotel
+- **wikidata** : Q111389477

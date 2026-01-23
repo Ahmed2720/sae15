@@ -18,10 +18,13 @@ def get_dataset2(requete):
     
 
 def compute_statistics2(donnees):
-    elements = donnees['elements']          # Récupère la liste des hôtels
-    total = len(elements)                   # Le total est la taille de la liste pour la division plus tard 
+    elements = donnees['elements'] # Récupère la liste des hôtels
+
+    total_etoiles= 0
+    total_handi = 0   
+
     dico_etoiles = {}                       
-    dico_handicap = {}                     
+    dico_handi = {} 
 
     for hotel in elements:                  # On parcourt chaque hôtel un par un
         tags = hotel.get('tags', {})        # on recupere les tags sans faire planter si vide grace a .get 
@@ -31,33 +34,41 @@ def compute_statistics2(donnees):
             if nb not in dico_etoiles:      # au cas ou la cle existe pas deja
                 dico_etoiles[nb] = 0        # on cree la cle à 0
             dico_etoiles[nb] += 1           # on ajoute 1 au compteur
+            total_etoiles += 1          
 
         if 'wheelchair' in tags:            
             acces = tags['wheelchair']     
-            if acces not in dico_handicap:  
-                dico_handicap[acces] = 0    
-            dico_handicap[acces] += 1       
+            if acces not in dico_handi:  
+                dico_handi[acces] = 0    
+            dico_handi[acces] += 1
+            total_handi += 1      
 
+    
     resultat_etoiles = {}                   # nouveau dico pour stocker les % 
     for cle, valeur in dico_etoiles.items():
-        pourcentage = int((valeur / total) * 100)       # calcul Nombre / Total * 100
+        pourcentage = int((valeur / total_etoiles) * 100)       # calcul Nombre / Total * 100
         resultat_etoiles[cle] = str(pourcentage) + "%"  # str comme on fait + on peut + des int et des str
 
     resultat_handicap = {}                  
-    for cle, valeur in dico_handicap.items():
-        pourcentage = int((valeur / total) * 100)       
+    for cle, valeur in dico_handi.items():
+        pourcentage = int((valeur / total_handi) * 100)       
         resultat_handicap[cle] = str(pourcentage) + "%" 
 
     return resultat_etoiles, resultat_handicap          # Renvoie les deux dico 
 
 def dataset_to_md(dataset: dict, filename: str):
     with open(filename, "w", encoding="utf-8") as f:
-        f.write("# donnees\n\n")
+      
+        f.write("# HOTELS BARCELONAIS\n\n")
 
-        stats_etoiles, stats_handi = compute_statistics2(dataset) #On recupere les stat via comput stat
+        f.write("### Informations Légales\n")
+        f.write("Les données sont issues de [OpenStreetMap](https://www.openstreetmap.org).\n\n")
+
+        stats_etoiles, stats_handi = compute_statistics2(dataset) 
 
         f.write("## Statistiques\n\n")
-        f.write("### pourcentage d'étoiles\n")
+        
+        f.write("### Pourcentage d'étoiles\n")
         for cle, valeur in stats_etoiles.items():
             f.write(f"- **{cle}** : {valeur}\n")
 
@@ -65,7 +76,7 @@ def dataset_to_md(dataset: dict, filename: str):
         for cle, valeur in stats_handi.items():
             f.write(f"- **{cle}** : {valeur}\n")
 
-        f.write("\n## liste complete\n\n")
+        f.write("\n## Liste complète\n\n")
 
         elements = dataset['elements']
         for element in elements:
@@ -74,37 +85,41 @@ def dataset_to_md(dataset: dict, filename: str):
             
             f.write(f"### {nom}\n\n")
 
-            for cle, valeur in tags.items(): # # On affiche tous les tags de l'hôtel
+            id = element.get('id')
+            type = element.get('type')
+            f.write(f"[Voir sur la carte](https://www.openstreetmap.org/{type}/{id})\n\n")
+
+            for cle, valeur in tags.items(): 
                 f.write(f"- **{cle}** : {valeur}\n")
             
             f.write("\n")
 
-
 def convert(fichier1,fichier2):
-    with open('info_locales.md', 'r') as f:
+    with open(fichier1, 'r') as f:
         text = f.read()
 
     html = markdown.markdown(text)
     
-    with open('info_locales.html', 'w') as f:
+    with open(fichier2, 'w') as f:
         f.write(html)
 
-def info_locales(data):
-    compute_statistics2(get_dataset2(query))
-    dataset_to_md(data,'info_locales.md')
-    convert('info_locales.md','info_locales.html')
+def info_locales(donnes):
+    compute_statistics2(donnes)
+    dataset_to_md(donnes,'info_locales.md')
+    convert('info_locales.md', 'info_locales.html')
 
 
 
+if __name__ == "__main__":
+    query = """
+    [out:json][timeout:90];
+    area["wikipedia"="ca:Barcelona"]->.searchArea;
+    nwr["tourism"="hotel"](area.searchArea);
+    out center;
+    """
 
-query = """
-[out:json][timeout:90];
-area["wikipedia"="ca:Barcelona"]->.searchArea;
-// C'est ICI que la magie opère :
-nwr["tourism"="hotel"]["stars"~"3|4|5"](area.searchArea);
-out center;
-"""
-
-
-
+    donnees = get_dataset2(query)
+    
+    if donnees:
+        info_locales(donnees)
 
